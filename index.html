@@ -7,38 +7,25 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        :root {
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --primary: #059669;
-            --danger: #dc2626;
-        }
+        :root { --bg-color: #f8fafc; --card-bg: #ffffff; --text-main: #1e293b; --primary: #059669; --danger: #dc2626; }
         body { background-color: var(--bg-color); color: var(--text-main); font-family: sans-serif; padding-bottom: 2rem; }
         .card { background-color: var(--card-bg); border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        
         .option-btn { transition: all 0.2s; border: 2px solid #e2e8f0; position: relative; }
         .option-btn:not(.disabled):hover { border-color: var(--primary); background-color: #f0fdf4; }
-        
         .option-btn.correct-choice { border-color: var(--primary) !important; background-color: #ecfdf5 !important; }
         .option-btn.wrong-choice { border-color: var(--danger) !important; background-color: #fef2f2 !important; }
         .option-btn.disabled { cursor: default; opacity: 0.7; }
-
         .feedback-box { animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
         .hidden { display: none !important; }
         .spinner { animation: rotate 2s linear infinite; width: 16px; height: 16px; }
         @keyframes rotate { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
-
     <div class="container mx-auto max-w-2xl p-4 sm:p-6">
-        
-        <!-- Header -->
         <header class="text-center mb-6 pt-4">
-            <img src="https://foodline-production.com/wp-content/uploads/2021/10/3752781497_3752781497.webp" alt="Foodline Logo" class="w-24 h-auto mx-auto mb-4 rounded-xl shadow-sm bg-white p-1">
+            <img src="https://foodline-production.com/wp-content/uploads/2021/10/3752781497_3752781497.webp" alt="Logo" class="w-24 h-auto mx-auto mb-4 rounded-xl shadow-sm bg-white p-1">
             <div class="flex items-center justify-center gap-2 mb-1">
                 <div id="statusDot" class="w-2 h-2 rounded-full bg-green-500"></div>
                 <span id="statusText" class="text-xs font-bold text-slate-500 uppercase tracking-widest">Онлайн</span>
@@ -47,342 +34,147 @@
             <p class="text-slate-500 text-sm">Виробництво соусів | Охорона праці</p>
         </header>
 
-        <!-- Step 1: Login -->
         <div id="step-login" class="card p-6 rounded-2xl">
             <div class="bg-emerald-50 border-l-4 border-emerald-500 p-4 mb-6">
                 <h3 class="font-bold text-emerald-800 text-sm">Інформація:</h3>
-                <p class="text-xs text-emerald-700 mt-1">
-                    Тест містить <strong>20 питань</strong>. Після кожної відповіді з'являтиметься пояснення. 
-                    Результати автоматично записуються в онлайн-таблицю. <br>
-                    Прохідний бал: <strong>18/20</strong>.
-                </p>
+                <p class="text-xs text-emerald-700 mt-1">Результати записуються у вкладку <b>Safety_Results</b>. Варіанти відповідей перемішуються випадково.</p>
             </div>
-
-            <label class="block text-sm font-bold mb-2 text-slate-700">Оберіть ваше прізвище та ім'я:</label>
-            <select id="employeeSelect" class="w-full p-3 border border-gray-300 rounded-xl bg-white text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-6">
-                <option value="">-- Натисніть для вибору --</option>
-            </select>
-            
-            <button onclick="startTest()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95">
-                РОЗПОЧАТИ ТЕСТ
-            </button>
+            <label class="block text-sm font-bold mb-2 text-slate-700">Оберіть ПІБ:</label>
+            <select id="employeeSelect" class="w-full p-3 border border-gray-300 rounded-xl bg-white text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-6"><option value="">-- Натисніть для вибору --</option></select>
+            <button onclick="startTest()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95">РОЗПОЧАТИ ТЕСТ</button>
         </div>
 
-        <!-- Step 2: Quiz -->
         <div id="step-quiz" class="hidden">
             <div class="flex justify-between items-center mb-4 px-2">
-                <span class="text-xs font-bold text-slate-400 uppercase">Питання <span id="q-current">1</span> / 20</span>
-                <div class="w-1/2 bg-gray-200 rounded-full h-2">
-                    <div id="progress-bar" class="bg-emerald-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-                </div>
+                <span class="text-xs font-bold text-slate-400 uppercase">Питання <span id="q-current">1</span> / <span id="q-total-counter">0</span></span>
+                <div class="w-1/2 bg-gray-200 rounded-full h-2"><div id="progress-bar" class="bg-emerald-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div></div>
             </div>
-
             <div class="card p-6 rounded-2xl min-h-[420px] flex flex-col justify-between">
                 <div>
                     <h2 id="question-text" class="text-xl font-bold mb-6 text-slate-800 leading-tight"></h2>
                     <div id="options-container" class="space-y-3"></div>
-                    
-                    <!-- Explanation Block -->
                     <div id="feedback-container" class="hidden mt-6 feedback-box">
                         <div id="feedback-type" class="p-4 rounded-xl border-l-4">
-                            <div class="flex items-center mb-1">
-                                <span id="feedback-icon" class="mr-2"></span>
-                                <span id="feedback-title" class="font-bold"></span>
-                            </div>
+                            <div class="flex items-center mb-1"><span id="feedback-icon" class="mr-2"></span><span id="feedback-title" class="font-bold"></span></div>
                             <p id="feedback-text" class="text-sm italic"></p>
                         </div>
                     </div>
                 </div>
-                
-                <button id="next-btn" onclick="nextQuestion()" disabled class="mt-8 w-full bg-gray-300 text-gray-500 font-bold py-4 rounded-xl cursor-not-allowed transition">
-                    Наступне питання
-                </button>
+                <button id="next-btn" onclick="nextQuestion()" disabled class="mt-8 w-full bg-gray-300 text-gray-500 font-bold py-4 rounded-xl cursor-not-allowed transition">Наступне питання</button>
             </div>
         </div>
 
-        <!-- Step 3: Results -->
         <div id="step-result" class="hidden text-center">
             <div class="card p-8 rounded-3xl">
-                <div id="sync-indicator" class="mb-4 text-[10px] font-black uppercase tracking-tighter text-amber-500 flex items-center justify-center gap-2">
-                    <span>Синхронізація з таблицею...</span>
-                    <div class="spinner border-2 border-amber-500 border-t-transparent rounded-full"></div>
-                </div>
-
+                <div id="sync-indicator" class="mb-4 text-[10px] font-black uppercase tracking-tighter text-amber-500 flex items-center justify-center gap-2"><span>Синхронізація...</span><div class="spinner border-2 border-amber-500 border-t-transparent rounded-full"></div></div>
                 <div id="icon-result" class="text-6xl mb-4"></div>
                 <h2 id="title-result" class="text-3xl font-bold mb-1"></h2>
-                
-                <div class="py-6 my-4 border-y border-slate-100">
-                    <p class="text-slate-400 text-xs uppercase font-bold tracking-widest mb-1">Результат</p>
-                    <p class="text-5xl font-black text-slate-800"><span id="score-val">0</span> / 20</p>
-                    <p id="percentage-val" class="text-sm font-bold text-emerald-600 mt-2 bg-emerald-50 inline-block px-3 py-1 rounded-full"></p>
-                </div>
-
+                <div class="py-6 my-4 border-y border-slate-100"><p class="text-5xl font-black text-slate-800"><span id="score-val">0</span> / <span id="score-total">0</span></p><p id="percentage-val" class="text-sm font-bold text-emerald-600 mt-2 bg-emerald-50 inline-block px-3 py-1 rounded-full"></p></div>
                 <p id="msg-result" class="text-base mb-8 px-4 text-slate-500 leading-relaxed"></p>
-
-                <div class="mb-8 flex justify-center">
-                    <div id="qrcode" class="p-2 bg-white border rounded-xl min-w-[128px] min-h-[128px] flex items-center justify-center text-xs text-slate-400"></div>
-                </div>
-
-                <button onclick="location.reload()" class="w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition">
-                    Повернутися на початок
-                </button>
+                <div class="mb-8 flex justify-center"><div id="qrcode" class="p-2 bg-white border rounded-xl"></div></div>
+                <button onclick="location.reload()" class="w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition">Повернутися</button>
             </div>
         </div>
-
     </div>
 
     <script>
-        // === НАЛАШТУВАННЯ GOOGLE SCRIPT ===
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwnPy4KqALWoxYMxw0NXWEM6Npyc49FH_6MV2p9Nao_Gqc5a2pg8DU3EUTjn3VJeZSy/exec';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkzOkyk2zwObyZThhZE1ACAPYAtwPMZsSoUij9yHw_vEKgmkImUOCVlk-F_SH06b_w/exec';
         const OFFLINE_QUEUE_KEY = 'sauce_safety_offline_queue';
-
-        const employeesList = [
-            "Бойко Світлана Петрівна", "Бондаренко Валерій Валентинович", "Вискірко Руслана Михайлівна",
-            "Воробей Людмила Леонідівна", "Ворона Інна Василівна", "Ворожко Дарья Вячеславівна",
-            "Галагін Євгеній Ярославович", "Гончарук Ольга Михайлівна", "Гора Андрій Олександрович",
-            "Долинюк Олександр Миколайович", "Єрко Віктор Андрійович", "Загура Іван Борисович",
-            "Іванчук Олександр Анатолійович", "Кішка Сергій Володимирович", "Козурак Іван Миколайович",
-            "Козило Василь Вячеславович", "Кораблін Дмитро", "Корнієнко Жанна Василівна",
-            "Король Юрій Валерійович", "Кучера Галина Іванівна", "Лавриненко Максим Миколайович",
-            "Максімюк Анатолій Анатолійович", "Максімюк Анатолій Вікторович", "Марків Олександр Йосипович",
-            "Мозговий Олександр Сергійович", "Непорадна Олена Михайлівна", "Огаркова Марія Володимирівна",
-            "Попадюк Анжела Миколаївна", "Садиріна Ольга Анатоліївна", "Свінцов Михайло Генадійович",
-            "Снітко Ярослав Іванович", "Соботович Лілія Михайлівна", "Соботович Тетяна Михайлівна",
-            "Солдатова Ірина Володимирівна", "Сосновський Валерій Петрович", "Фалько Анатолій Олександрович",
-            "Фисина Наталія Григорівна", "Хакімов Олександр Михайлович", "Хлупянець Віталій Анатолійович",
-            "Христянович Віталій Едуардович", "Черніцький Назарій Вячеславович", "Шанчук Павло Сергійович",
-            "Шута Олександра Сергіївна"
+        const employeesList = ["Бойко Світлана Петрівна", "Бондаренко Валерій Валентинович", "Вискірко Руслана Михайлівна", "Воробей Людмила Леонідівна", "Ворона Інна Василівна", "Ворожко Дарья Вячеславівна", "Галагін Євгеній Ярославович", "Гончарук Ольга Михайлівна", "Гора Андрій Олександрович", "Долинюк Олександр Миколайович", "Єрко Віктор Андрійович", "Загура Іван Борисович", "Іванчук Олександр Анатолійович", "Кішка Сергій Володимирович", "Козурак Іван Миколайович", "Козило Василь Вячеславович", "Кораблін Дмитро", "Корнієнко Жанна Василівна", "Король Юрій Валерійович", "Кучера Галина Іванівна", "Лавриненко Максим Миколайович", "Максімюк Анатолій Анатолійович", "Максімюк Анатолій Вікторович", "Марків Олександр Йосипович", "Мозговий Олександр Сергійович", "Непорадна Олена Михайлівна", "Огаркова Марія Володимирівна", "Попадюк Анжела Миколаївна", "Садиріна Ольга Анатоліївна", "Свінцов Михайло Генадійович", "Снітко Ярослав Іванович", "Соботович Лілія Михайлівна", "Соботович Тетяна Михайлівна", "Солдатова Ірина Володимирівна", "Сосновський Валерій Петрович", "Фалько Анатолій Олександрович", "Фисина Наталія Григорівна", "Хакімов Олександр Михайлович", "Хлупянець Віталій Анатолійович", "Христянович Віталій Едуардович", "Черніцький Назарій Вячеславович", "Шанчук Павло Сергійович", "Шута Олександра Сергіївна"];
+        const originalQuestions = [
+            { q: "Який ЗІЗ є обов'язковим при підготовці мийних розчинів?", a: ["Тільки гумові чоботи", "Захисні окуляри, хімічно стійкі рукавички та фартух", "Звичайна маска та халат"], ci: 1, h: "Луги та кислоти можуть спричинити опік очей миттєво." },
+            { q: "Яка головна небезпека при відкритті варильного котла?", a: ["Запах", "Викид гарячої пари під тиском", "Зміна кольору"], ci: 1, h: "Завжди перевіряйте манометр перед відкриттям." },
+            { q: "Ви помітили розлиту олію на підлозі. Дії?", a: ["Проігнорувати", "Негайно огородити та прибрати розлив", "Повідомити ввечері"], ci: 1, h: "Слизька підлога — причина №1 травматизму." },
+            { q: "Можна знімати решітку з працюючого міксера?", a: ["Так", "Категорично заборонено", "Якщо обережно"], ci: 1, h: "Рухомі вали затягують одяг за секунду." },
+            { q: "Коли натискати 'E-Stop'?", a: ["Для перерви", "Загроза життю або поломка", "З дозволу"], ci: 1, h: "Це кнопка миттєвого порятунку." },
+            { q: "Як правильно піднімати 25 кг?", a: ["Спиною", "З рівною спиною м'язами ніг", "На прямих ногах"], ci: 1, h: "Бережіть хребет від важких травм." },
+            { q: "В якому напрямку різати пакування?", a: ["До себе", "Від себе", "Неважливо"], ci: 1, h: "Ніж має летіти від вашого тіла." },
+            { q: "Чим ЗАБОРОНЕНО гасити палаючу олію?", a: ["Порошком", "Водою", "Піском"], ci: 1, h: "Вода в олії викликає факел вогню." },
+            { q: "Можна торкатися пульта мокрими руками?", a: ["Так", "Ні, ризик удару струмом", "В рукавичках"], ci: 1, h: "Волога — провідник електрики." },
+            { q: "Що таке LOTO перед ремонтом?", a: ["Миття", "Блокування джерел енергії", "Запис"], ci: 1, h: "Унеможливлює випадковий запуск." },
+            { q: "Побачили витік пари. Що робити?", a: ["Закрити ганчіркою", "Огородити, викликати слюсаря", "Підтягнути болти"], ci: 1, h: "Пара розрізає шкіру миттєво." },
+            { q: "Навіщо респіратор при роботі з гірчицею?", a: ["Стиль", "Захист дихальних шляхів", "Запах"], ci: 1, h: "Пил спецій викликає опіки слизової." },
+            { q: "Скільки промивати очі від хімії?", a: ["1 хв", "15-20 хвилин", "Протерти"], ci: 1, h: "Потрібна повна нейтралізація хімії." },
+            { q: "Правило руху біля навантажувача?", a: ["Швидкість", "Зоровий контакт з водієм", "Посередині"], ci: 1, h: "Переконайтеся, що вас бачать." },
+            { q: "Оголений дріт на підлозі. Дії?", a: ["Прибрати ногою", "Огородити, повідомити енергетика", "Заклеїти"], ci: 1, h: "Будь-який контакт може бути смертельним." },
+            { q: "Розбилося скло в цеху. Як прибрати?", a: ["Руками", "Щітка, совок, вологе прибирання", "Змити в трап"], ci: 1, h: "Скалки — небезпека для споживача." },
+            { q: "Навіщо беруші біля гомогенізатора?", a: ["Від шуму", "Захист слуху", "Мода"], ci: 1, h: "Шум понад 85 дБ руйнує нерв." },
+            { q: "Правило 'трьох точок' на драбині?", a: ["3 ніжки", "3 кінцівки на драбині", "3 хвилини"], ci: 1, h: "Запобігає падінню з висоти." },
+            { q: "Чому заборонено сережки та каблучки?", a: ["Втратяться", "Затягування + HACCP", "Некрасиво"], ci: 1, h: "Це ризик травми та бруду в їжі." },
+            { q: "Запах горілого від щитка. Що робити?", a: ["Чекати", "Вимкнути все, викликати електрика", "Дути"], ci: 1, h: "Ознака пожежі. Реакція — миттєва." }
         ];
-
-        const questions = [
-            { q: "Який ЗІЗ є обов'язковим при підготовці мийних розчинів (лугів/кислот) для СІР-мийки?", a: ["Тільки гумові чоботи", "Захисні окуляри, хімічно стійкі рукавички та фартух", "Звичайна маска та халат"], correct: 1, hint: "Луги та кислоти можуть спричинити хімічний опік очей миттєво при найменшому розбризкуванні." },
-            { q: "Яка головна небезпека при відкритті варильного котла з соусом після циклу?", a: ["Запах", "Викид гарячої пари під тиском", "Зміна кольору"], correct: 1, hint: "Завжди перевіряйте манометр: тиск повинен бути на нулі перед відкриттям кришки." },
-            { q: "Ви помітили розлиту олію на підлозі. Ваші дії?", a: ["Проігнорувати", "Негайно огородити та прибрати розлив спеціальними засобами", "Повідомити в кінці дня"], correct: 1, hint: "Слизька підлога — причина №1 травматизму. Негайна реакція рятує від падіння." },
-            { q: "Чи можна знімати решітку з працюючого міксера?", a: ["Так", "Категорично заборонено", "Якщо обережно"], correct: 1, hint: "Рухомі вали затягують одяг або руки за частку секунди. Тільки повна зупинка!" },
-            { q: "Коли натискати кнопку 'Аварійна зупинка'?", a: ["Для перерви", "Загроза життю або поломка техніки", "Тільки з дозволу"], correct: 1, hint: "Це кнопка негайної дії для запобігання нещасним випадкам." },
-            { q: "Як правильно піднімати мішок 25 кг?", a: ["Спиною", "Присісти, тримати спину рівно і піднімати зусиллям ніг", "На прямих ногах"], correct: 1, hint: "Підйом за рахунок м'язів ніг захищає ваш хребет від важких травм." },
-            { q: "В якому напрямку різати пакування ножем?", a: ["До себе", "Від себе", "Неважливо"], correct: 1, hint: "Напрямок 'від себе' гарантує, що при зісковзуванні ніж не поранить вас." },
-            { q: "Чим ЗАБОРОНЕНО гасити палаючу олію?", a: ["Порошком", "Водою", "Піском"], correct: 1, hint: "Вода в гарячій олії миттєво випаровується, створюючи вогняний вибух." },
-            { q: "Можна торкатися пульта мокрими руками?", a: ["Так", "Ні, ризик удару струмом", "Можна в рукавичках"], correct: 1, hint: "Волога — ідеальний провідник електрики. Навіть слабкий струм стає небезпечним." },
-            { q: "Що таке LOTO перед ремонтом?", a: ["Миття", "Блокування джерел енергії замками та маркування", "Запис"], correct: 1, hint: "Це гарантія, що ніхто випадково не ввімкне верстат, поки ви проводите ремонт." },
-            { q: "Побачили витік пари. Що робити?", a: ["Закрити ганчіркою", "Огородити зону, викликати слюсаря", "Трохи підтягнути болти"], correct: 1, hint: "Пара під тиском розрізає шкіру миттєво. Тримайте безпечну дистанцію." },
-            { q: "Навіщо респіратор при роботі з гірчицею?", a: ["Стиль", "Захист дихальних шляхів від агресивного пилу спецій", "Запах"], correct: 1, hint: "Дрібний пил пекучих спецій викликає сильне подразнення та опіки слизової." },
-            { q: "Скільки промивати очі від хімії?", a: ["1 хв", "15-20 хвилин чистою водою", "Протерти"], correct: 1, hint: "Тривале промивання необхідне для повної нейтралізації хімії в тканинах ока." },
-            { q: "Правило руху біля навантажувача?", a: ["Швидкість", "Встановити зоровий контакт з водієм", "Посередині"], correct: 1, hint: "Водій навантажувача має багато сліпих зон. Переконайтеся, що він вас бачить." },
-            { q: "Оголений дріт на підлозі. Дії?", a: ["Прибрати ногою", "Огородити, повідомити енергетика", "Заклеїти"], correct: 1, hint: "Будь-який контакт з оголеним дротом є смертельно небезпечним. Не наближайтеся!" },
-            { q: "Розбилося скло в цеху. Як прибрати?", a: ["Руками", "Щітка, совок, вологе прибирання та перевірка скалок", "Змити в трап"], correct: 1, hint: "Дрібні скалки скла — це загроза для рук та критичне забруднення продукту." },
-            { q: "Навіщо беруші біля гомогенізатора?", a: ["Від шуму", "Захист слуху від незворотної втрати", "Мода"], correct: 1, hint: "Виробничий шум понад 85 дБ поступово руйнує слух без можливості відновлення." },
-            { q: "Правило 'трьох точок' на драбині?", a: ["3 ніжки", "Дві руки та одна нога (або навпаки) завжди на драбині", "3 хвилини"], correct: 1, hint: "Це золоте правило запобігає втраті рівноваги та падінню з висоти." },
-            { q: "Чому заборонено сережки та каблучки?", a: ["Втратяться", "Ризик затягування в механізми та потрапляння в соус", "Некрасиво"], correct: 1, hint: "Прикраси — це ризик травми пальців та сторонній предмет у їжі (HACCP)." },
-            { q: "Запах горілого від щитка. Що робити?", a: ["Чекати", "Вимкнути все і негайно викликати електрика", "Дути на нього"], correct: 1, hint: "Запах горілої ізоляції — це ознака пожежі, що починається. Реакція має бути миттєвою." }
-        ];
-
-        let currentQIndex = 0;
-        let score = 0;
-        let userName = "";
-        let selectedOptionIndex = null;
-        let testLog = []; 
-
+        let currentQIndex = 0, score = 0, userName = "", selectedOptionIndex = null, testLog = [], currentOptions = [];
         document.addEventListener('DOMContentLoaded', () => {
             const select = document.getElementById('employeeSelect');
-            employeesList.sort().forEach(name => {
-                const opt = document.createElement('option');
-                opt.value = name;
-                opt.textContent = name;
-                select.appendChild(opt);
-            });
+            employeesList.sort().forEach(name => { const opt = document.createElement('option'); opt.value = name; opt.textContent = name; select.appendChild(opt); });
+            document.getElementById('q-total-counter').innerText = originalQuestions.length;
             updateNetworkStatus();
             window.addEventListener('online', () => { updateNetworkStatus(); processOfflineQueue(); });
             window.addEventListener('offline', updateNetworkStatus);
         });
-
-        function startTest() {
-            userName = document.getElementById('employeeSelect').value;
-            if (!userName) { alert("Будь ласка, оберіть ПІБ"); return; }
-            document.getElementById('step-login').classList.add('hidden');
-            document.getElementById('step-quiz').classList.remove('hidden');
-            renderQuestion();
-        }
-
+        function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+        function startTest() { userName = document.getElementById('employeeSelect').value; if (!userName) { alert("Оберіть ПІБ"); return; } document.getElementById('step-login').classList.add('hidden'); document.getElementById('step-quiz').classList.remove('hidden'); renderQuestion(); }
         function renderQuestion() {
-            const q = questions[currentQIndex];
+            const q = originalQuestions[currentQIndex];
             document.getElementById('q-current').innerText = currentQIndex + 1;
-            document.getElementById('progress-bar').style.width = `${((currentQIndex) / questions.length) * 100}%`;
+            document.getElementById('progress-bar').style.width = `${(currentQIndex / originalQuestions.length) * 100}%`;
             document.getElementById('question-text').innerText = q.q;
             document.getElementById('feedback-container').classList.add('hidden');
-            
-            const container = document.getElementById('options-container');
-            container.innerHTML = '';
-            
-            const nextBtn = document.getElementById('next-btn');
-            nextBtn.disabled = true;
+            const container = document.getElementById('options-container'); container.innerHTML = '';
+            const nextBtn = document.getElementById('next-btn'); nextBtn.disabled = true;
             nextBtn.className = "mt-8 w-full bg-gray-300 text-gray-500 font-bold py-4 rounded-xl cursor-not-allowed transition";
-            nextBtn.innerText = currentQIndex === questions.length - 1 ? "Завершити" : "Наступне питання";
-
-            q.a.forEach((opt, index) => {
+            nextBtn.innerText = currentQIndex === originalQuestions.length - 1 ? "Завершити тест" : "Наступне питання";
+            currentOptions = q.a.map((text, i) => ({ text, isCorrect: i === q.ci }));
+            shuffle(currentOptions);
+            currentOptions.forEach((opt, i) => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn w-full text-left p-4 rounded-xl text-lg flex items-center mb-2';
-                btn.innerHTML = `<span class="w-8 h-8 rounded-full border-2 border-slate-200 flex items-center justify-center mr-3 text-xs font-bold text-slate-400">${String.fromCharCode(65 + index)}</span> ${opt}`;
-                btn.onclick = () => showFeedback(index, btn);
+                btn.innerHTML = `<span class="w-8 h-8 rounded-full border-2 border-slate-200 flex items-center justify-center mr-3 text-xs font-bold text-slate-400">${String.fromCharCode(65 + i)}</span> ${opt.text}`;
+                btn.onclick = () => showFeedback(i, btn);
                 container.appendChild(btn);
             });
         }
-
-        function showFeedback(index, btn) {
-            if (selectedOptionIndex !== null) return; 
-            
-            selectedOptionIndex = index;
-            const q = questions[currentQIndex];
-            const isCorrect = (index === q.correct);
-            
-            if (isCorrect) {
-                score++;
-                btn.classList.add('correct-choice');
-                testLog.push(`✅`);
-                displayFeedbackBox(true, q.hint);
-            } else {
-                btn.classList.add('wrong-choice');
-                testLog.push(`❌`);
-                const allBtns = document.querySelectorAll('.option-btn');
-                allBtns[q.correct].classList.add('correct-choice');
-                displayFeedbackBox(false, q.hint);
-            }
-
+        function showFeedback(idx, btn) {
+            if (selectedOptionIndex !== null) return;
+            selectedOptionIndex = idx;
+            const isCorrect = currentOptions[idx].isCorrect;
+            if (isCorrect) { score++; btn.classList.add('correct-choice'); testLog.push('✅'); } 
+            else { btn.classList.add('wrong-choice'); testLog.push('❌'); document.querySelectorAll('.option-btn').forEach((b, i) => { if (currentOptions[i].isCorrect) b.classList.add('correct-choice'); }); }
             document.querySelectorAll('.option-btn').forEach(b => b.classList.add('disabled'));
-            
-            const nextBtn = document.getElementById('next-btn');
-            nextBtn.disabled = false;
-            nextBtn.className = "mt-8 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg transition";
+            const fbox = document.getElementById('feedback-container'), ftype = document.getElementById('feedback-type'), ficon = document.getElementById('feedback-icon'), ftitle = document.getElementById('feedback-title'), ftext = document.getElementById('feedback-text');
+            fbox.classList.remove('hidden'); ftext.innerText = originalQuestions[currentQIndex].h;
+            if (isCorrect) { ftype.className = "p-4 rounded-xl border-l-4 border-emerald-500 bg-emerald-50 text-emerald-800"; ficon.innerText = "✅"; ftitle.innerText = "Вірно!"; }
+            else { ftype.className = "p-4 rounded-xl border-l-4 border-red-500 bg-red-50 text-red-800"; ficon.innerText = "❌"; ftitle.innerText = "Помилка!"; }
+            const nextBtn = document.getElementById('next-btn'); nextBtn.disabled = false; nextBtn.className = "mt-8 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg transition";
         }
-
-        function displayFeedbackBox(isCorrect, hint) {
-            const box = document.getElementById('feedback-container');
-            const type = document.getElementById('feedback-type');
-            const icon = document.getElementById('feedback-icon');
-            const title = document.getElementById('feedback-title');
-            const text = document.getElementById('feedback-text');
-
-            box.classList.remove('hidden');
-            text.innerText = hint;
-
-            if (isCorrect) {
-                type.className = "p-4 rounded-xl border-l-4 border-emerald-500 bg-emerald-50 text-emerald-800";
-                icon.innerHTML = "✅";
-                title.innerText = "Вірно!";
-            } else {
-                type.className = "p-4 rounded-xl border-l-4 border-red-500 bg-red-50 text-red-800";
-                icon.innerHTML = "❌";
-                title.innerText = "Не зовсім...";
-            }
-        }
-
-        function nextQuestion() {
-            selectedOptionIndex = null;
-            currentQIndex++;
-            if (currentQIndex < questions.length) renderQuestion(); else showResults();
-        }
-
+        function nextQuestion() { selectedOptionIndex = null; currentQIndex++; if (currentQIndex < originalQuestions.length) renderQuestion(); else showResults(); }
         function showResults() {
-            document.getElementById('step-quiz').classList.add('hidden');
-            document.getElementById('step-result').classList.remove('hidden');
-
-            const percent = Math.round((score / questions.length) * 100);
-            const passed = score >= 18;
-
-            document.getElementById('score-val').innerText = score;
-            document.getElementById('percentage-val').innerText = `${percent}% Успіху`;
-            
-            const icon = document.getElementById('icon-result');
-            const title = document.getElementById('title-result');
-            const msg = document.getElementById('msg-result');
-
-            if (passed) {
-                icon.innerText = "🏆"; title.innerText = "ПРОЙДЕНО";
-                title.className = "text-3xl font-black mb-1 text-emerald-600";
-                msg.innerText = "Ви підтвердили знання з ТБ. Ваші результати автоматично занесено в таблицю.";
-            } else {
-                icon.innerText = "⚠️"; title.innerText = "НЕ СКЛАДЕНО";
-                title.className = "text-3xl font-black mb-1 text-red-600";
-                msg.innerText = `Необхідно мінімум 18 балів. У вас ${score}. Будь ласка, перегляньте правила безпеки та спробуйте ще раз.`;
-            }
-
-            const payload = { 
-                formType: 'safety_test',
-                name: userName, 
-                score, 
-                total: 20, 
-                percent, 
-                passed, 
-                details: testLog.join(' '), 
-                date: new Date().toISOString() 
-            };
+            document.getElementById('step-quiz').classList.add('hidden'); document.getElementById('step-result').classList.remove('hidden');
+            const total = originalQuestions.length;
+            const pct = Math.round((score / total) * 100), passed = score >= 18;
+            document.getElementById('score-val').innerText = score; document.getElementById('score-total').innerText = total;
+            document.getElementById('percentage-val').innerText = `${pct}% Успіху`;
+            const icon = document.getElementById('icon-result'), title = document.getElementById('title-result'), msg = document.getElementById('msg-result');
+            if (passed) { icon.innerText = "🏆"; title.innerText = "ПРОЙДЕНО"; title.className = "text-3xl font-black mb-1 text-emerald-600"; msg.innerText = "Результати занесено в таблицю."; }
+            else { icon.innerText = "⚠️"; title.innerText = "НЕ СКЛАДЕНО"; title.className = "text-3xl font-black mb-1 text-red-600"; msg.innerText = `Необхідно 18 балів. У вас ${score}. Спробуйте ще раз.`; }
+            const payload = { formType: 'Safety_Results', name: userName, score, total: total, percent: pct, passed, details: testLog.join(' '), date: new Date().toISOString() };
             sendToGAS(payload);
-
-            const qrText = `TB:${userName}|${score}/20|${passed?'OK':'FAIL'}|${testLog.join('')}`;
-            const qrContainer = document.getElementById("qrcode");
-            qrContainer.innerHTML = "";
-            
-            try {
-                new QRCode(qrContainer, { 
-                    text: qrText, 
-                    width: 160, 
-                    height: 160,
-                    correctLevel : QRCode.Level.L 
-                });
-            } catch (e) {
-                console.error("QR Error:", e);
-                qrContainer.innerText = "QR звіт згенеровано";
-            }
+            const qrText = `TB:${userName}|${score}/${total}|${passed?'OK':'FAIL'}|${testLog.join('')}`;
+            try { new QRCode(document.getElementById("qrcode"), { text: qrText, width: 140, height: 140, correctLevel : QRCode.CorrectLevel.L }); } catch (e) { console.error(e); }
         }
-
-        function sendToGAS(payload) {
-            if (!navigator.onLine) { saveToOffline(payload); return; }
-
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).then(() => {
-                document.getElementById('sync-indicator').innerHTML = '<span class="text-emerald-500 font-bold uppercase tracking-widest text-[10px]">✅ Результати в таблиці</span>';
-            }).catch(() => { saveToOffline(payload); });
+        function sendToGAS(p) {
+            if (!navigator.onLine) { saveToOffline(p); return; }
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(p) })
+            .then(() => document.getElementById('sync-indicator').innerHTML = '<span class="text-emerald-500 font-bold uppercase tracking-widest text-[10px]">✅ Збережено</span>')
+            .catch(() => saveToOffline(p));
         }
-
-        function saveToOffline(payload) {
-            const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
-            queue.push(payload);
-            localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
-            document.getElementById('sync-indicator').innerHTML = '<span class="text-amber-500 font-bold uppercase tracking-widest text-[10px]">📵 Офлайн (Збережено на пристрої)</span>';
-        }
-
+        function saveToOffline(p) { const q = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]'); q.push(p); localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(q)); document.getElementById('sync-indicator').innerHTML = '<span class="text-amber-500 font-bold uppercase tracking-widest text-[10px]">📵 Офлайн</span>'; }
         async function processOfflineQueue() {
-            if (!navigator.onLine) return;
-            const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
-            if (queue.length === 0) return;
-
-            for (const payload of [...queue]) {
-                try {
-                    await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                    queue.shift();
-                } catch (e) { break; }
-            }
-            localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
-            updateNetworkStatus();
+            if (!navigator.onLine) return; const q = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]'); if (q.length === 0) return;
+            for (const p of [...q]) { try { await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(p) }); q.shift(); } catch (e) { break; } }
+            localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(q)); updateNetworkStatus();
         }
-
-        function updateNetworkStatus() {
-            const dot = document.getElementById('statusDot');
-            const text = document.getElementById('statusText');
-            const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
-            
-            if (!navigator.onLine) {
-                dot.className = 'w-2 h-2 rounded-full bg-red-500';
-                text.textContent = 'Офлайн';
-            } else {
-                dot.className = 'w-2 h-2 rounded-full bg-green-500';
-                text.textContent = queue.length > 0 ? `Онлайн (Черга: ${queue.length})` : 'Онлайн';
-            }
-        }
+        function updateNetworkStatus() { const dot = document.getElementById('statusDot'), txt = document.getElementById('statusText'); if (!navigator.onLine) { dot.className = 'w-2 h-2 rounded-full bg-red-500'; txt.textContent = 'Офлайн'; } else { dot.className = 'w-2 h-2 rounded-full bg-green-500'; txt.textContent = 'Онлайн'; } }
     </script>
 </body>
 </html>
