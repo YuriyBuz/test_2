@@ -12,16 +12,22 @@
             --card-bg: #ffffff;
             --text-main: #1e293b;
             --primary: #059669;
+            --danger: #dc2626;
         }
         body { background-color: var(--bg-color); color: var(--text-main); font-family: sans-serif; padding-bottom: 2rem; }
         .card { background-color: var(--card-bg); border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        .option-btn { transition: all 0.2s; border: 2px solid #e2e8f0; }
-        .option-btn.selected { border-color: var(--primary); background-color: #d1fae5; font-weight: bold; }
-        .hidden { display: none !important; }
-        .hint-box { display: none; animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Анімація завантаження */
+        .option-btn { transition: all 0.2s; border: 2px solid #e2e8f0; position: relative; }
+        .option-btn:not(.disabled):hover { border-color: var(--primary); background-color: #f0fdf4; }
+        
+        .option-btn.correct-choice { border-color: var(--primary) !important; background-color: #ecfdf5 !important; }
+        .option-btn.wrong-choice { border-color: var(--danger) !important; background-color: #fef2f2 !important; }
+        .option-btn.disabled { cursor: default; opacity: 0.7; }
+
+        .feedback-box { animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .hidden { display: none !important; }
         .spinner { animation: rotate 2s linear infinite; width: 16px; height: 16px; }
         @keyframes rotate { 100% { transform: rotate(360deg); } }
     </style>
@@ -46,8 +52,9 @@
             <div class="bg-emerald-50 border-l-4 border-emerald-500 p-4 mb-6">
                 <h3 class="font-bold text-emerald-800 text-sm">Інформація:</h3>
                 <p class="text-xs text-emerald-700 mt-1">
+                    Тест містить <strong>20 питань</strong>. Після кожної відповіді з'являтиметься пояснення. 
                     Результати автоматично записуються в онлайн-таблицю. <br>
-                    Прохідний бал для допуску: <strong>18/20</strong>.
+                    Прохідний бал: <strong>18/20</strong>.
                 </p>
             </div>
 
@@ -75,15 +82,21 @@
                     <h2 id="question-text" class="text-xl font-bold mb-6 text-slate-800 leading-tight"></h2>
                     <div id="options-container" class="space-y-3"></div>
                     
-                    <div class="mt-8 border-t pt-4">
-                        <button onclick="toggleHint()" class="text-emerald-600 text-xs font-bold flex items-center hover:underline uppercase tracking-wider">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            Підказка
-                        </button>
-                        <div id="hint-text" class="hint-box mt-2 p-3 bg-amber-50 border border-amber-100 text-amber-800 text-sm rounded-lg italic"></div>
+                    <!-- Explanation Block -->
+                    <div id="feedback-container" class="hidden mt-6 feedback-box">
+                        <div id="feedback-type" class="p-4 rounded-xl border-l-4">
+                            <div class="flex items-center mb-1">
+                                <span id="feedback-icon" class="mr-2"></span>
+                                <span id="feedback-title" class="font-bold"></span>
+                            </div>
+                            <p id="feedback-text" class="text-sm italic"></p>
+                        </div>
                     </div>
                 </div>
-                <button id="next-btn" onclick="nextQuestion()" disabled class="mt-8 w-full bg-gray-300 text-gray-500 font-bold py-4 rounded-xl cursor-not-allowed transition">Далі</button>
+                
+                <button id="next-btn" onclick="nextQuestion()" disabled class="mt-8 w-full bg-gray-300 text-gray-500 font-bold py-4 rounded-xl cursor-not-allowed transition">
+                    Наступне питання
+                </button>
             </div>
         </div>
 
@@ -107,7 +120,7 @@
                 <p id="msg-result" class="text-base mb-8 px-4 text-slate-500 leading-relaxed"></p>
 
                 <div class="mb-8 flex justify-center">
-                    <div id="qrcode" class="p-2 bg-white border rounded-xl"></div>
+                    <div id="qrcode" class="p-2 bg-white border rounded-xl min-w-[128px] min-h-[128px] flex items-center justify-center text-xs text-slate-400"></div>
                 </div>
 
                 <button onclick="location.reload()" class="w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition">
@@ -142,34 +155,34 @@
         ];
 
         const questions = [
-            { q: "Який ЗІЗ є обов'язковим при підготовці мийних розчинів (лугів/кислот) для СІР-мийки?", a: ["Тільки гумові чоботи", "Захисні окуляри, хімічно стійкі рукавички та фартух", "Звичайна маска та халат"], correct: 1, hint: "Луги та кислоти можуть спричинити хімічний опік очей миттєво." },
-            { q: "Яка головна небезпека при відкритті варильного котла з соусом після циклу?", a: ["Запах", "Викид гарячої пари під тиском", "Зміна кольору"], correct: 1, hint: "Тиск у котлі має бути нульовим перед відкриттям кришки." },
-            { q: "Ви помітили розлиту олію на підлозі. Ваші дії?", a: ["Проігнорувати", "Негайно огородити та прибрати розлив", "Повідомити в кінці дня"], correct: 1, hint: "Олія на підлозі — це 100% ризик падіння працівника." },
-            { q: "Чи можна знімати решітку з працюючого міксера?", a: ["Так", "Категорично заборонено", "Якщо обережно"], correct: 1, hint: "Рухомі вали не прощають помилок." },
-            { q: "Коли натискати кнопку 'Аварійна зупинка'?", a: ["Для перерви", "Загроза життю або поломка техніки", "Тільки з дозволу"], correct: 1, hint: "Це кнопка порятунку в екстреній ситуації." },
-            { q: "Як правильно піднімати мішок 25 кг?", a: ["Спиною", "З рівною спиною за рахунок ніг", "На прямих ногах"], correct: 1, hint: "Бережіть хребет — працюйте м'язами стегон." },
-            { q: "В якому напрямку різати пакування ножем?", a: ["До себе", "Від себе", "Неважливо"], correct: 1, hint: "При зісковзуванні ніж має летіти в бік від вашого тіла." },
-            { q: "Чим ЗАБОРОНЕНО гасити палаючу олію?", a: ["Порошком", "Водою", "Піском"], correct: 1, hint: "Вода в олії викликає факел вогню." },
-            { q: "Можна торкатися пульта мокрими руками?", a: ["Так", "Ні, ризик удару струмом", "Можна в рукавичках"], correct: 1, hint: "Волога — ідеальний провідник електрики." },
-            { q: "Що таке LOTO перед ремонтом?", a: ["Миття", "Блокування джерел енергії замками", "Запис"], correct: 1, hint: "Це фізичне унеможливлення запуску машини іншим працівником." },
-            { q: "Побачили витік пари. Що робити?", a: ["Закрити ганчіркою", "Огородити, повідомити майстра", "Трохи підтягнути болти"], correct: 1, hint: "Пара під тиском розрізає шкіру миттєво." },
-            { q: "Навіщо респіратор при роботі з гірчицею?", a: ["Стиль", "Захист від подразнення легень", "Запах"], correct: 1, hint: "Дрібний пил спецій агресивно діє на слизову." },
-            { q: "Скільки промивати очі від хімії?", a: ["1 хв", "15-20 хвилин", "Протерти"], correct: 1, hint: "Хімія вимивається лише тривалим потоком чистої води." },
-            { q: "Правило руху біля навантажувача?", a: ["Швидкість", "Зоровий контакт з водієм", "Посередині"], correct: 1, hint: "Переконайтеся, що водій вас помітив." },
-            { q: "Оголений дріт на підлозі. Дії?", a: ["Прибрати ногою", "Огородити, викликати електрика", "Заклеїти"], correct: 1, hint: "Ви не знаєте напруги — не торкайтеся." },
-            { q: "Розбилося скло в цеху. Як прибрати?", a: ["Руками", "Щітка, совок, вологе прибирання", "Змити в трап"], correct: 1, hint: "Скло — критичне забруднення продукту." },
-            { q: "Навіщо беруші біля гомогенізатора?", a: ["Від шуму", "Захист слуху від втрати", "Мода"], correct: 1, hint: "Виробничий шум викликає незворотну глухоту." },
-            { q: "Правило 'трьох точок' на драбині?", a: ["3 ніжки", "Три кінцівки завжди на драбині", "3 хвилини"], correct: 1, hint: "Це ваша рівновага на висоті." },
-            { q: "Чому заборонено сережки та каблучки?", a: ["Втратяться", "Ризик затягування + HACCP", "Некрасиво"], correct: 1, hint: "Безпека пальців + чистота продукту." },
-            { q: "Запах горілого від щитка. Що робити?", a: ["Чекати", "Вимкнути і викликати електрика", "Дути на нього"], correct: 1, hint: "Це перша ознака короткого замикання." }
+            { q: "Який ЗІЗ є обов'язковим при підготовці мийних розчинів (лугів/кислот) для СІР-мийки?", a: ["Тільки гумові чоботи", "Захисні окуляри, хімічно стійкі рукавички та фартух", "Звичайна маска та халат"], correct: 1, hint: "Луги та кислоти можуть спричинити хімічний опік очей миттєво при найменшому розбризкуванні." },
+            { q: "Яка головна небезпека при відкритті варильного котла з соусом після циклу?", a: ["Запах", "Викид гарячої пари під тиском", "Зміна кольору"], correct: 1, hint: "Завжди перевіряйте манометр: тиск повинен бути на нулі перед відкриттям кришки." },
+            { q: "Ви помітили розлиту олію на підлозі. Ваші дії?", a: ["Проігнорувати", "Негайно огородити та прибрати розлив спеціальними засобами", "Повідомити в кінці дня"], correct: 1, hint: "Слизька підлога — причина №1 травматизму. Негайна реакція рятує від падіння." },
+            { q: "Чи можна знімати решітку з працюючого міксера?", a: ["Так", "Категорично заборонено", "Якщо обережно"], correct: 1, hint: "Рухомі вали затягують одяг або руки за частку секунди. Тільки повна зупинка!" },
+            { q: "Коли натискати кнопку 'Аварійна зупинка'?", a: ["Для перерви", "Загроза життю або поломка техніки", "Тільки з дозволу"], correct: 1, hint: "Це кнопка негайної дії для запобігання нещасним випадкам." },
+            { q: "Як правильно піднімати мішок 25 кг?", a: ["Спиною", "Присісти, тримати спину рівно і піднімати зусиллям ніг", "На прямих ногах"], correct: 1, hint: "Підйом за рахунок м'язів ніг захищає ваш хребет від важких травм." },
+            { q: "В якому напрямку різати пакування ножем?", a: ["До себе", "Від себе", "Неважливо"], correct: 1, hint: "Напрямок 'від себе' гарантує, що при зісковзуванні ніж не поранить вас." },
+            { q: "Чим ЗАБОРОНЕНО гасити палаючу олію?", a: ["Порошком", "Водою", "Піском"], correct: 1, hint: "Вода в гарячій олії миттєво випаровується, створюючи вогняний вибух." },
+            { q: "Можна торкатися пульта мокрими руками?", a: ["Так", "Ні, ризик удару струмом", "Можна в рукавичках"], correct: 1, hint: "Волога — ідеальний провідник електрики. Навіть слабкий струм стає небезпечним." },
+            { q: "Що таке LOTO перед ремонтом?", a: ["Миття", "Блокування джерел енергії замками та маркування", "Запис"], correct: 1, hint: "Це гарантія, що ніхто випадково не ввімкне верстат, поки ви проводите ремонт." },
+            { q: "Побачили витік пари. Що робити?", a: ["Закрити ганчіркою", "Огородити зону, викликати слюсаря", "Трохи підтягнути болти"], correct: 1, hint: "Пара під тиском розрізає шкіру миттєво. Тримайте безпечну дистанцію." },
+            { q: "Навіщо респіратор при роботі з гірчицею?", a: ["Стиль", "Захист дихальних шляхів від агресивного пилу спецій", "Запах"], correct: 1, hint: "Дрібний пил пекучих спецій викликає сильне подразнення та опіки слизової." },
+            { q: "Скільки промивати очі від хімії?", a: ["1 хв", "15-20 хвилин чистою водою", "Протерти"], correct: 1, hint: "Тривале промивання необхідне для повної нейтралізації хімії в тканинах ока." },
+            { q: "Правило руху біля навантажувача?", a: ["Швидкість", "Встановити зоровий контакт з водієм", "Посередині"], correct: 1, hint: "Водій навантажувача має багато сліпих зон. Переконайтеся, що він вас бачить." },
+            { q: "Оголений дріт на підлозі. Дії?", a: ["Прибрати ногою", "Огородити, повідомити енергетика", "Заклеїти"], correct: 1, hint: "Будь-який контакт з оголеним дротом є смертельно небезпечним. Не наближайтеся!" },
+            { q: "Розбилося скло в цеху. Як прибрати?", a: ["Руками", "Щітка, совок, вологе прибирання та перевірка скалок", "Змити в трап"], correct: 1, hint: "Дрібні скалки скла — це загроза для рук та критичне забруднення продукту." },
+            { q: "Навіщо беруші біля гомогенізатора?", a: ["Від шуму", "Захист слуху від незворотної втрати", "Мода"], correct: 1, hint: "Виробничий шум понад 85 дБ поступово руйнує слух без можливості відновлення." },
+            { q: "Правило 'трьох точок' на драбині?", a: ["3 ніжки", "Дві руки та одна нога (або навпаки) завжди на драбині", "3 хвилини"], correct: 1, hint: "Це золоте правило запобігає втраті рівноваги та падінню з висоти." },
+            { q: "Чому заборонено сережки та каблучки?", a: ["Втратяться", "Ризик затягування в механізми та потрапляння в соус", "Некрасиво"], correct: 1, hint: "Прикраси — це ризик травми пальців та сторонній предмет у їжі (HACCP)." },
+            { q: "Запах горілого від щитка. Що робити?", a: ["Чекати", "Вимкнути все і негайно викликати електрика", "Дути на нього"], correct: 1, hint: "Запах горілої ізоляції — це ознака пожежі, що починається. Реакція має бути миттєвою." }
         ];
 
         let currentQIndex = 0;
         let score = 0;
         let userName = "";
         let selectedOptionIndex = null;
+        let testLog = []; 
 
-        // Init UI
         document.addEventListener('DOMContentLoaded', () => {
             const select = document.getElementById('employeeSelect');
             employeesList.sort().forEach(name => {
@@ -196,8 +209,7 @@
             document.getElementById('q-current').innerText = currentQIndex + 1;
             document.getElementById('progress-bar').style.width = `${((currentQIndex) / questions.length) * 100}%`;
             document.getElementById('question-text').innerText = q.q;
-            document.getElementById('hint-text').innerText = q.hint;
-            document.getElementById('hint-text').style.display = 'none';
+            document.getElementById('feedback-container').classList.add('hidden');
             
             const container = document.getElementById('options-container');
             container.innerHTML = '';
@@ -205,30 +217,67 @@
             const nextBtn = document.getElementById('next-btn');
             nextBtn.disabled = true;
             nextBtn.className = "mt-8 w-full bg-gray-300 text-gray-500 font-bold py-4 rounded-xl cursor-not-allowed transition";
-            nextBtn.innerText = currentQIndex === questions.length - 1 ? "Завершити" : "Далі";
+            nextBtn.innerText = currentQIndex === questions.length - 1 ? "Завершити" : "Наступне питання";
 
             q.a.forEach((opt, index) => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn w-full text-left p-4 rounded-xl text-lg flex items-center mb-2';
-                btn.innerHTML = `<span class="w-8 h-8 rounded-full border-2 border-slate-200 flex items-center justify-center mr-3 text-xs font-bold text-slate-400">${index+1}</span> ${opt}`;
-                btn.onclick = () => {
-                    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected', 'bg-emerald-50', 'border-emerald-500'));
-                    btn.classList.add('selected', 'bg-emerald-50', 'border-emerald-500');
-                    selectedOptionIndex = index;
-                    nextBtn.disabled = false;
-                    nextBtn.className = "mt-8 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg transition";
-                };
+                btn.innerHTML = `<span class="w-8 h-8 rounded-full border-2 border-slate-200 flex items-center justify-center mr-3 text-xs font-bold text-slate-400">${String.fromCharCode(65 + index)}</span> ${opt}`;
+                btn.onclick = () => showFeedback(index, btn);
                 container.appendChild(btn);
             });
         }
 
-        function toggleHint() {
-            const h = document.getElementById('hint-text');
-            h.style.display = h.style.display === 'block' ? 'none' : 'block';
+        function showFeedback(index, btn) {
+            if (selectedOptionIndex !== null) return; 
+            
+            selectedOptionIndex = index;
+            const q = questions[currentQIndex];
+            const isCorrect = (index === q.correct);
+            
+            if (isCorrect) {
+                score++;
+                btn.classList.add('correct-choice');
+                testLog.push(`✅`);
+                displayFeedbackBox(true, q.hint);
+            } else {
+                btn.classList.add('wrong-choice');
+                testLog.push(`❌`);
+                const allBtns = document.querySelectorAll('.option-btn');
+                allBtns[q.correct].classList.add('correct-choice');
+                displayFeedbackBox(false, q.hint);
+            }
+
+            document.querySelectorAll('.option-btn').forEach(b => b.classList.add('disabled'));
+            
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.disabled = false;
+            nextBtn.className = "mt-8 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg transition";
+        }
+
+        function displayFeedbackBox(isCorrect, hint) {
+            const box = document.getElementById('feedback-container');
+            const type = document.getElementById('feedback-type');
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-title');
+            const text = document.getElementById('feedback-text');
+
+            box.classList.remove('hidden');
+            text.innerText = hint;
+
+            if (isCorrect) {
+                type.className = "p-4 rounded-xl border-l-4 border-emerald-500 bg-emerald-50 text-emerald-800";
+                icon.innerHTML = "✅";
+                title.innerText = "Вірно!";
+            } else {
+                type.className = "p-4 rounded-xl border-l-4 border-red-500 bg-red-50 text-red-800";
+                icon.innerHTML = "❌";
+                title.innerText = "Не зовсім...";
+            }
         }
 
         function nextQuestion() {
-            if (selectedOptionIndex === questions[currentQIndex].correct) score++;
+            selectedOptionIndex = null;
             currentQIndex++;
             if (currentQIndex < questions.length) renderQuestion(); else showResults();
         }
@@ -250,25 +299,44 @@
             if (passed) {
                 icon.innerText = "🏆"; title.innerText = "ПРОЙДЕНО";
                 title.className = "text-3xl font-black mb-1 text-emerald-600";
-                msg.innerText = "Ви підтвердили знання з техніки безпеки. Ваші результати надіслано в базу.";
+                msg.innerText = "Ви підтвердили знання з ТБ. Ваші результати автоматично занесено в таблицю.";
             } else {
                 icon.innerText = "⚠️"; title.innerText = "НЕ СКЛАДЕНО";
                 title.className = "text-3xl font-black mb-1 text-red-600";
-                msg.innerText = "Результат занизький. Будь ласка, перегляньте правила безпеки та пройдіть тест повторно.";
+                msg.innerText = `Необхідно мінімум 18 балів. У вас ${score}. Будь ласка, перегляньте правила безпеки та спробуйте ще раз.`;
             }
 
-            const payload = { name: userName, score, total: 20, percent, passed, date: new Date().toISOString() };
+            const payload = { 
+                formType: 'safety_test',
+                name: userName, 
+                score, 
+                total: 20, 
+                percent, 
+                passed, 
+                details: testLog.join(' '), 
+                date: new Date().toISOString() 
+            };
             sendToGAS(payload);
 
-            const qrText = `Safety: ${userName} | ${score}/20 | ${passed?'Passed':'Failed'}`;
-            new QRCode(document.getElementById("qrcode"), { text: qrText, width: 128, height: 128 });
+            const qrText = `TB:${userName}|${score}/20|${passed?'OK':'FAIL'}|${testLog.join('')}`;
+            const qrContainer = document.getElementById("qrcode");
+            qrContainer.innerHTML = "";
+            
+            try {
+                new QRCode(qrContainer, { 
+                    text: qrText, 
+                    width: 160, 
+                    height: 160,
+                    correctLevel : QRCode.Level.L 
+                });
+            } catch (e) {
+                console.error("QR Error:", e);
+                qrContainer.innerText = "QR звіт згенеровано";
+            }
         }
 
         function sendToGAS(payload) {
-            if (!navigator.onLine) {
-                saveToOffline(payload);
-                return;
-            }
+            if (!navigator.onLine) { saveToOffline(payload); return; }
 
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
@@ -276,17 +344,15 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             }).then(() => {
-                document.getElementById('sync-indicator').innerHTML = '<span class="text-emerald-500">✅ Результати в таблиці</span>';
-            }).catch(() => {
-                saveToOffline(payload);
-            });
+                document.getElementById('sync-indicator').innerHTML = '<span class="text-emerald-500 font-bold uppercase tracking-widest text-[10px]">✅ Результати в таблиці</span>';
+            }).catch(() => { saveToOffline(payload); });
         }
 
         function saveToOffline(payload) {
             const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
             queue.push(payload);
             localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
-            document.getElementById('sync-indicator').innerHTML = '<span class="text-red-500">📵 Офлайн (Збережено на пристрої)</span>';
+            document.getElementById('sync-indicator').innerHTML = '<span class="text-amber-500 font-bold uppercase tracking-widest text-[10px]">📵 Офлайн (Збережено на пристрої)</span>';
         }
 
         async function processOfflineQueue() {
