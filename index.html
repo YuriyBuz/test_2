@@ -176,5 +176,115 @@
         }
         function updateNetworkStatus() { const dot = document.getElementById('statusDot'), txt = document.getElementById('statusText'); if (!navigator.onLine) { dot.className = 'w-2 h-2 rounded-full bg-red-500'; txt.textContent = 'Офлайн'; } else { dot.className = 'w-2 h-2 rounded-full bg-green-500'; txt.textContent = 'Онлайн'; } }
     </script>
+
+    <!-- ================= ПОРТАЛ: підтвердження особи (SSO) =================
+         Тест відкривається з порталу з одноразовим токеном ?pt=...
+         Портал повертає ПІБ -> список ПІБ підміняється однією підтвердженою
+         людиною і блокується. Ніхто не може пройти тест "за іншого".
+         Цей блок однаковий у всіх 6 тестах — правити треба всюди одночасно.
+    ===================================================================== -->
+    <script>
+    (function () {
+        // Backend порталу (Apps Script). Той самий деплой, що і в порталі.
+        var PORTAL_API = 'https://script.google.com/macros/s/AKfycbzYLX7Rc3jfg1zH_DW_Qbx3uiAK38T9aojJiCwVKSX2-3zej4ScsuC9aFeKcYMNcVfzVA/exec';
+        var PORTAL_URL = 'https://yuriybuz.github.io/portal/';
+
+        // ПЕРЕМИКАЧ РЕЖИМУ:
+        //   false — як зараз: без ?pt= працює старий список ПІБ (там є звільнені).
+        //   true  — тест відкривається ТІЛЬКИ з порталу; прямі посилання
+        //           блокуються, список ПІБ не використовується взагалі
+        //           ("мертві душі" зникають повністю).
+        var REQUIRE_PORTAL = false;
+
+        var pt = null;
+        try { pt = new URLSearchParams(location.search).get('pt'); } catch (e) { pt = null; }
+
+        function ready(fn) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', fn, { once: true });
+            } else {
+                fn();
+            }
+        }
+
+        function note(text, color) {
+            var sel = document.getElementById('employeeSelect');
+            if (!sel || !sel.parentNode) return;
+            var p = document.getElementById('portal-sso-note');
+            if (!p) {
+                p = document.createElement('p');
+                p.id = 'portal-sso-note';
+                p.style.cssText = 'font-size:13px;margin:8px 0 0;line-height:1.4;';
+                sel.parentNode.insertBefore(p, sel.nextSibling);
+            }
+            p.style.color = color;
+            p.innerHTML = text;
+        }
+
+        function lockTo(name) {
+            var sel = document.getElementById('employeeSelect');
+            if (!sel) return;
+            sel.innerHTML = '';
+            var opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            sel.appendChild(opt);
+            sel.selectedIndex = 0;
+            sel.disabled = true;
+            var lbl = sel.previousElementSibling;
+            if (lbl && lbl.tagName === 'LABEL') lbl.textContent = 'Проходить (підтверджено порталом):';
+            note('&#10004; Особу підтверджено порталом.', '#047857');
+        }
+
+        function toPlain(html) {
+            var d = document.createElement('div');
+            d.innerHTML = html;
+            return (d.textContent || '').replace(/\s+/g, ' ').trim();
+        }
+
+        function deny(text) {
+            var sel = document.getElementById('employeeSelect');
+            if (sel) {
+                sel.innerHTML = '<option value="">-- вхід тільки з порталу --</option>';
+                sel.disabled = true;
+            }
+            window.startTest = function () { alert(toPlain(text)); };
+            note(text, '#b91c1c');
+        }
+
+        function needPortal() {
+            return 'Тест відкривається тільки з порталу працівника. ' +
+                   'Зайдіть на <a href="' + PORTAL_URL + '" style="color:#047857;font-weight:bold;">портал</a> ' +
+                   '&rarr; «Тести» і відкрийте тест звідти.';
+        }
+
+        ready(function () {
+            if (!pt) {
+                if (REQUIRE_PORTAL) deny(needPortal());
+                return; // старий режим — список ПІБ лишається як був
+            }
+            fetch(PORTAL_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ requestType: 'resolve_test_token', pt: pt })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d && d.user) {
+                    lockTo(d.user);
+                } else if (REQUIRE_PORTAL) {
+                    deny('Посилання застаріло або вже використане. ' + needPortal());
+                } else {
+                    note('Не вдалося підтвердити особу через портал — оберіть ПІБ вручну.', '#b45309');
+                }
+            })
+            .catch(function () {
+                if (REQUIRE_PORTAL) deny('Немає зв\'язку з порталом. Спробуйте ще раз.');
+                else note('Немає зв\'язку з порталом — оберіть ПІБ вручну.', '#b45309');
+            });
+        });
+    })();
+    </script>
+
 </body>
 </html>
